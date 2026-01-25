@@ -1,0 +1,73 @@
+/* This is the secret sauce for our SPA */
+.hidden {
+    display: none;
+}
+
+.page-content {
+    padding: 20px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+}
+
+/* Just to make the nav look like a nav */
+nav {
+    background: #f4f4f4;
+    padding: 10px;
+}
+
+/* Hide nav by default */
+.nav-hidden {
+    display: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.stats-grid {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    border: 2px solid #4CAF50;
+    padding: 15px;
+    border-radius: 8px;
+    flex: 1;
+}
+
+.dashboard h2 {
+    color: #2c3e50;
+}
+
+.lesson-layout {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap; /* Wraps to vertical on small screens */
+    margin-top: 20px;
+}
+
+.video-section, .text-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+.lesson-footer {
+    text-align: center;
+    padding: 20px;
+    background: #e8f5e9;
+    border-radius: 8px;
+}
