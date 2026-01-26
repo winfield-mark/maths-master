@@ -71,3 +71,45 @@ nav {
     background: #e8f5e9;
     border-radius: 8px;
 }
+
+.test-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.test-stats {
+    display: flex;
+    justify-content: space-between;
+    background: #f4f4f4;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for choices */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.choice-btn {
+    padding: 20px;
+    font-size: 1.2rem;
+    border: 2px solid #3498db;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.choice-btn:hover {
+    background: #ebf5fb;
+    transform: translateY(-2px);
+}
+
+.hidden {
+    display: none;
+}
