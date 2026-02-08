@@ -1,7 +1,7 @@
 // public/tests.js
 export const tests = [
     {
-        testId: "number-13", // Maps to Introduction to Fractions
+        testId: "n10", // Maps to Introduction to Fractions
         config: {
             questionsToAsk: 2, // Number of questions drawn from the pool
             minToPass: 2       // Passing threshold
@@ -25,7 +25,7 @@ export const tests = [
         ]
     },
     {
-        testId: "number-14", // Maps to Mastering Decimals
+        testId: "n20", // Maps to Mastering Decimals
         config: {
             questionsToAsk: 2,
             minToPass: 1

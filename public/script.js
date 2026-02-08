@@ -10,9 +10,19 @@ async function startLesson(id) {
     activeLessonId = id;
     await loadPage('Lessons');
     const lesson = curriculum.find(l => l.lessonId === id);
+    
     if (lesson) {
         document.getElementById('lesson-title').textContent = lesson.title;
-        document.getElementById('lesson-video').src = `https://www.youtube.com/embed/${lesson.media.youtubeId}`;
+        
+        // Update for local video storage
+        const videoElement = document.getElementById('lesson-video');
+        const sourceElement = document.getElementById('video-source');
+        
+        // This assumes your assets folder is served at the root/assets
+        sourceElement.src = `/assets/${lesson.media.videoFile}`;
+        
+        videoElement.load(); // This tells the browser to reload the new video file
+        
         document.getElementById('lesson-text').innerHTML = lesson.content;
         if (window.MathJax) MathJax.typesetPromise();
     }
@@ -34,7 +44,10 @@ document.body.addEventListener('click', (e) => {
         const page = e.target.dataset.page;
         loadPage(page).then(() => { if (page === 'Home') renderDashboard(); });
     }
-    if (e.target.id === 'start-test-btn') startTest(activeLessonId);
+    if (e.target.id === 'start-test-btn'){ 
+        console.log("Test requested for lesson:", activeLessonId);
+        startTest(activeLessonId);
+    }
     if (e.target.id === 'next-question-btn') handleNextStep();
 });
 
