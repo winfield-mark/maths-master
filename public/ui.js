@@ -36,4 +36,11 @@ export function renderDashboard() {
             container.appendChild(btn);
         }
     });
+
+    // Update the wallet token count
+    const tokenCount = parseInt(localStorage.getItem('userTokens') || '0');
+    const tokenDisplay = document.getElementById('stat-tokens');
+    if (tokenDisplay) {
+        tokenDisplay.textContent = tokenCount;
+    }
 }

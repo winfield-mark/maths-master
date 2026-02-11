@@ -48,7 +48,7 @@ document.body.addEventListener('click', (e) => {
         console.log("Test requested for lesson:", activeLessonId);
         startTest(activeLessonId);
     }
-    if (e.target.id === 'next-question-btn') handleNextStep();
+    // if (e.target.id === 'next-question-btn') handleNextStep();
 });
 
 document.body.addEventListener('submit', (e) => {
