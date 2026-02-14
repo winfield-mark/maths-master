@@ -1,19 +1,33 @@
-<!-- Login.html -->
 <div class="login-container">
     <h2>Maths Mastery Login</h2>
     <p>Please enter your details to track your progress.</p>
     
-    <form id="login-form">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" placeholder="e.g. MathWhiz2024" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" required>
-        </div>
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter username">
+    </div>
 
-        <button type="submit" id="login-btn">Login to Home</button>
-    </form>
+    <div class="form-group">
+        <label for="email" id="email-label" class="hidden">Email:</label>
+        <input type="email" id="email" class="hidden" placeholder="Enter email">
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter password">
+    </div>
+
+    <div class="form-group hidden" id="confirm-pass-group">
+        <label for="confirm-password">Confirm Password:</label>
+        <input type="password" id="confirm-password" placeholder="Repeat password">
+    </div>
+
+    <div class="login-actions">
+        <button id="login-btn" class="primary-btn">Login</button>
+        <button id="show-register-btn" class="secondary-btn">New User? Register</button>
+        <button id="register-btn" class="primary-btn hidden">Create Account</button>
+        <button id="back-to-login-btn" class="secondary-btn hidden">Back to Login</button>
+    </div>
+    
+    <p id="login-error" class="error-text hidden"></p>
 </div>

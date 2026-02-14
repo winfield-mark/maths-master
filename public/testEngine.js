@@ -2,7 +2,7 @@
 import { tests } from './tests.js';
 import { loadPage } from './loader.js';
 import { renderDashboard } from './ui.js';
-import { markAsComplete, currentUser } from './user.js';
+import { markAsComplete, currentUser, saveUserData } from './user.js';
 import { curriculum } from './curriculum.js';
 
 let currentTestSet = [];
@@ -11,32 +11,112 @@ let score = 0;
 let testConfig = null;
 let activeTestId = null;
 
-export async function startTest(id) {
-    activeTestId = id;
-    
-    try {
-        // Dynamically import the specific test file from the assets folder
-        const module = await import(`/assets/tests/${id}.js`);
-        const testData = module.testData;
+// public/testEngine.js
 
+export async function startTest(id) {
+    if (!id) {
+        alert('No lesson selected for testing.');
+        console.error('startTest called without an id:', { id, activeTestId });
+        return;
+    }
+
+    // Reset runtime state immediately so stale UI/state cannot persist
+    activeTestId = id;
+    currentTestSet = [];
+    currentQuestionIndex = 0;
+    score = 0;
+    testConfig = null;
+
+    // Ensure the Tests page is reloaded (clear any previous results) and show a loading placeholder
+    const testsDiv = document.getElementById('Tests');
+    if (testsDiv) testsDiv.innerHTML = ''; // force loadPage to re-fetch the page
+    await loadPage('Tests');
+    const testContainer = document.getElementById('test-container');
+
+    // Attempt to import the test module (cache-busted)
+    const timestamp = new Date().getTime();
+    const importPath = `/assets/tests/${id}.js?v=${timestamp}`;
+    try {
+        console.log('Importing test module:', importPath);
+        let module;
+        try {
+            module = await import(importPath);
+        } catch (impErr) {
+            console.warn('Direct import failed, attempting fetch+blob fallback', impErr);
+            // Try fetching the file text and importing from a blob (works around MIME/CORS issues)
+            const resp = await fetch(importPath, { cache: 'no-store' });
+            if (!resp.ok) throw new Error(`Fetch failed with status ${resp.status}`);
+            const text = await resp.text();
+            const blob = new Blob([text], { type: 'text/javascript' });
+            const blobUrl = URL.createObjectURL(blob);
+            try {
+                module = await import(blobUrl);
+            } finally {
+                URL.revokeObjectURL(blobUrl);
+            }
+        }
+
+        const testData = module.testData;
         testConfig = testData.config;
+
+        // Reset counters and load the questions from the module
         currentTestSet = [...testData.questions]
             .sort(() => 0.5 - Math.random())
-            .slice(0, testConfig.questionsToAsk);
+            .slice(0, testConfig.questionsToAsk || testData.questions.length);
 
         currentQuestionIndex = 0;
         score = 0;
 
-        await loadPage('Tests');
-        document.getElementById('test-title').textContent = `Testing: ${id}`;
+        const titleEl = document.getElementById('test-title');
+        if (titleEl) titleEl.textContent = `Testing: ${id}`;
         renderQuestion();
+
     } catch (err) {
         console.error("Could not load test file:", err);
-        alert("Test file not found for this lesson.");
+        // First, inform the user
+        if (testContainer) testContainer.innerHTML = `<h3>Error</h3><p>Test file not found for lesson: ${id}</p>`;
+        alert(`Test file not found for lesson: ${id}\nTried: ${importPath}\n${err.message}`);
+
+        // Fallback: try to find the test data in the bundled `tests` list
+        try {
+            const fallback = tests.find(t => t.testId === id || t.testId === String(id));
+            if (fallback) {
+                console.log('Using fallback test data from public/tests.js for', id);
+                const testsDiv = document.getElementById('Tests');
+                if (testsDiv) testsDiv.innerHTML = ''; // force reload of page structure
+                await loadPage('Tests');
+
+                const testData = fallback;
+                testConfig = testData.config;
+
+                currentTestSet = [...testData.questions]
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, testConfig.questionsToAsk || testData.questions.length);
+
+                currentQuestionIndex = 0;
+                score = 0;
+
+                const titleEl = document.getElementById('test-title');
+                if (titleEl) titleEl.textContent = `Testing: ${id}`;
+                renderQuestion();
+                return;
+            }
+        } catch (fallbackErr) {
+            console.error('Fallback to bundled tests failed', fallbackErr);
+        }
     }
 }
 
 export function renderQuestion() {
+    if (!currentTestSet || currentTestSet.length === 0) {
+        const container = document.getElementById('choices-container');
+        const testContainer = document.getElementById('test-container');
+        if (container) container.innerHTML = '';
+        if (testContainer) testContainer.innerHTML = '<p>No questions available for this test.</p>';
+        console.warn('renderQuestion called but currentTestSet is empty', { currentTestSet, currentQuestionIndex });
+        return;
+    }
+
     const question = currentTestSet[currentQuestionIndex];
     const container = document.getElementById('choices-container');
     const feedback = document.getElementById('test-feedback');
@@ -177,49 +257,37 @@ export function handleNextStep() {
     }
 }
 
+// public/testEngine.js
+
 function showResults() {
     const isPass = score >= testConfig.minToPass;
     const testContainer = document.getElementById('test-container');
-    
-    // 1. Find the lesson in the curriculum to get your specific tokensReward
     const lesson = curriculum.find(l => l.lessonId === activeTestId);
     const masteryReward = lesson ? lesson.tokensReward : 10;
-    const finalReward = isPass ? masteryReward : 1; 
+    const finalReward = isPass ? masteryReward : 1;
 
-    // 2. Mark as complete if they passed
+    // 1. Update the local session object
     if (isPass) {
-        markAsComplete(activeTestId);
+        markAsComplete(activeTestId); // Adds ID to currentUser.lessonsDone
+    }
+    
+    if (currentUser) {
+        currentUser.tokens += finalReward; // Adds tokens to currentUser.tokens
+        
+        // 2. IMPORTANT: Send the updated currentUser object to the server
+        saveUserData(); 
     }
 
     // 3. Display the Results UI
     testContainer.innerHTML = `
-        <div class="test-results" style="text-align: center; padding: 20px;">
-            <h2>Test Complete!</h2>
-            <hr>
-            <p style="font-size: 1.5rem;">You scored: <strong>${score} / ${currentTestSet.length}</strong></p>
-            <p class="status-msg" style="color: ${isPass ? '#2e7d32' : '#d32f2f'}; font-weight: bold;">
-                ${isPass ? "🎉 Congratulations! You Passed!" : "❌ Not quite there yet. Keep practicing!"}
-            </p>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
-                <p style="margin:0;">Tokens earned: 🪙 <strong>${finalReward}</strong></p>
-            </div>
-            <button id="finish-test-btn" class="primary-btn">Return to Dashboard</button>
-        </div>
+        <h3>Test Complete!</h3>
+        <p>You scored: ${score} / ${currentTestSet.length}</p>
+        <p>${isPass ? "🎉 Congratulations! You Passed!" : "❌ Not quite there yet."}</p>
+        <p>Tokens earned: 🪙 ${finalReward}</p>
+        <button id="finish-test-btn" class="primary-btn">Return to Dashboard</button>
     `;
 
-    // 4. Update the actual token balance (Saving to localStorage)
-    let tokens = parseInt(localStorage.getItem('userTokens') || '0');
-    localStorage.setItem('userTokens', tokens + finalReward);
-    
-    // Also update the active session object if it exists
-    if (currentUser && currentUser.tokens) {
-        currentUser.tokens.received += finalReward;
-    }
-
-    // Trigger UI refresh for the token counter
-    window.dispatchEvent(new Event('storage'));
-
-    // 5. Handle the return home
+    // 4. Handle navigation
     document.getElementById('finish-test-btn').onclick = () => {
         loadPage('Home').then(() => renderDashboard());
     };

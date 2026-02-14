@@ -1,0 +1,31 @@
+[
+  {
+    "username": "Teacher",
+    "password": "pwd123",
+    "email": "teacher@example.com",
+    "lessonsDone": [],
+    "tokens": 1,
+    "gameState": {
+      "level": 1,
+      "lastPlayed": "2026-02-12",
+      "pads": [],
+      "characters": []
+    }
+  },
+  {
+    "username": "melvinmill",
+    "password": "123",
+    "email": "mwinfield1969@gmail.com",
+    "lessonsDone": [
+      "n10",
+      "n20"
+    ],
+    "tokens": 27,
+    "gameState": {
+      "level": 1,
+      "lastPlayed": "2026-02-12",
+      "pads": [],
+      "characters": []
+    }
+  }
+]
